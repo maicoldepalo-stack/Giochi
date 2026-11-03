@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gioco dei numeri</title>
+<meta name="description" content="Gioco didattico per allenare l'ascolto e la lettura dei numeri in inglese. Accessibile, senza registrazione e senza raccolta di dati.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔢%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #eef4f8;
+    --surface: #ffffff;
+    --ink: #12263a;
+    --muted: #4a5d70;
+    --line: #b9c9d8;
+    --accent: #0b5cad;
+    --accent-ink: #ffffff;
+    --good: #0b6b3a;
+    --good-bg: #dff3e6;
+    --bad: #9a2b12;
+    --bad-bg: #fde8e1;
+    --focus: #e69b00;
+    --fs: 1.125rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-contrast="alto"]) {
+      --bg: #0f1c2a;
+      --surface: #172a3d;
+      --ink: #eaf2f9;
+      --muted: #b4c6d8;
+      --line: #3a5470;
+      --accent: #7fb8f0;
+      --accent-ink: #08243f;
+      --good: #8be0ae;
+      --good-bg: #123b27;
+      --bad: #ffb199;
+      --bad-bg: #4a2016;
+    }
+  }
+  :root[data-contrast="alto"] {
+    --bg: #000000;
+    --surface: #000000;
+    --ink: #ffffff;
+    --muted: #ffffff;
+    --line: #ffffff;
+    --accent: #ffe600;
+    --accent-ink: #000000;
+    --good: #7dff9f;
+    --good-bg: #000000;
+    --bad: #ff9d7d;
+    --bad-bg: #000000;
+    --focus: #00e5ff;
+  }
+  :root[data-size="grande"] { --fs: 1.375rem; }
+  :root[data-size="molto-grande"] { --fs: 1.65rem; }
+
+  * { box-sizing: border-box; }
+  html { font-size: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Atkinson Hyperlegible", "Segoe UI", Verdana, Arial, sans-serif;
+    font-size: var(--fs);
+    line-height: 1.55;
+  }
+  :root[data-font="leggibile"] body {
+    font-family: Verdana, "Trebuchet MS", Tahoma, sans-serif;
+    letter-spacing: 0.04em;
+    word-spacing: 0.12em;
+    line-height: 1.8;
+  }
+  .skip {
+    position: absolute; left: -999px; top: 0;
+    background: var(--accent); color: var(--accent-ink);
+    padding: .6rem 1rem; z-index: 10;
+  }
+  .skip:focus { left: .5rem; top: .5rem; }
+
+  a, button, input, select, summary { font: inherit; }
+  :focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 1rem; }
+  header { padding: 1rem 0 .5rem; }
+  h1 { font-size: 1.9em; line-height: 1.2; margin: 0 0 .25rem; }
+  h2 { font-size: 1.3em; margin: 0 0 .75rem; }
+  .lead { margin: 0; color: var(--muted); }
+
+  .card {
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  details.settings summary {
+    cursor: pointer; font-weight: 700; padding: .4rem 0;
+  }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin-top: .75rem; }
+  label, .label { display: block; font-weight: 700; margin-bottom: .3rem; }
+  select {
+    width: 100%; padding: .6rem .7rem; color: var(--ink); background: var(--surface);
+    border: 2px solid var(--line); border-radius: 10px;
+  }
+  .check { display: flex; align-items: center; gap: .7rem; font-weight: 400; margin: 0; }
+  .check input { width: 1.5rem; height: 1.5rem; accent-color: var(--accent); flex: none; }
+  .hint { color: var(--muted); font-size: .85em; margin: .2rem 0 0; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    min-height: 3rem; padding: .6rem 1.2rem;
+    border: 2px solid var(--accent); border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink);
+    font-weight: 700; cursor: pointer;
+  }
+  .btn.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn[disabled] { opacity: .55; cursor: not-allowed; }
+  .row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+
+  .progress-text { font-weight: 700; margin: 0 0 .4rem; }
+  .bar { height: .9rem; background: var(--bg); border: 2px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+
+  .prompt { font-size: 1.15em; margin: 1.25rem 0 .75rem; }
+  .bigword {
+    font-size: 1.7em; font-weight: 700; text-align: center;
+    padding: 1rem; border: 2px dashed var(--line); border-radius: 12px; margin: .5rem 0 1rem;
+    overflow-wrap: anywhere;
+  }
+  .answer-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: stretch; }
+  input[type="text"] {
+    flex: 1 1 10rem; min-width: 0; padding: .6rem .9rem; font-size: 1.4em; font-weight: 700;
+    color: var(--ink); background: var(--surface);
+    border: 3px solid var(--line); border-radius: 12px; text-align: center;
+  }
+
+  .choices { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+  .choice { font-size: 1.4em; min-height: 3.6rem; }
+  .choice.right { background: var(--good-bg); color: var(--good); border-color: var(--good); border-width: 4px; }
+  .choice.wrong { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); border-width: 4px; }
+
+  .feedback {
+    margin-top: 1rem; padding: 1rem; border-radius: 12px; border: 3px solid transparent;
+    min-height: 1px;
+  }
+  .feedback.ok { background: var(--good-bg); color: var(--good); border-color: var(--good); }
+  .feedback.ko { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+  .feedback strong { display: block; font-size: 1.1em; }
+  .feedback p { margin: .35rem 0 0; color: var(--ink); }
+
+  .score { font-size: 3em; font-weight: 700; margin: .25rem 0; }
+  ul.review { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: .6rem; }
+  ul.review li {
+    display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between;
+    padding: .7rem .9rem; border: 2px solid var(--line); border-radius: 10px;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  .notice { background: var(--bad-bg); color: var(--bad); border: 2px solid var(--bad); border-radius: 12px; padding: .8rem 1rem; margin-top: 1rem; }
+  footer { color: var(--muted); font-size: .85em; padding: 1.5rem 0 2rem; }
+  [hidden] { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Vai al gioco</a>
+
+<div class="wrap">
+  <header>
+    <h1>Gioco dei numeri</h1>
+    <p class="lead">Allena l'ascolto e la lettura dei numeri in inglese. Non c'è tempo limite: sbagliare serve per imparare.</p>
+  </header>
+
+  <details class="card settings" id="settings">
+    <summary>Impostazioni e accessibilità</summary>
+    <div class="grid">
+      <div>
+        <label for="sel-level">Livello</label>
+        <select id="sel-level">
+          <option value="10">Facile: da 0 a 10</option>
+          <option value="20" selected>Base: da 0 a 20</option>
+          <option value="100">Intermedio: da 0 a 100</option>
+          <option value="1000">Avanzato: da 0 a 1000</option>
+        </select>
+      </div>
+      <div>
+        <label for="sel-mode">Modalità di gioco</label>
+        <select id="sel-mode">
+          <option value="listen" selected>Ascolta e scrivi il numero</option>
+          <option value="read">Leggi la parola e scegli il numero</option>
+        </select>
+      </div>
+      <div>
+        <label for="sel-size">Dimensione del testo</label>
+        <select id="sel-size">
+          <option value="normale">Normale</option>
+          <option value="grande">Grande</option>
+          <option value="molto-grande">Molto grande</option>
+        </select>
+      </div>
+      <div>
+        <label for="sel-accent">Pronuncia</label>
+        <select id="sel-accent">
+          <option value="en-GB" selected>Inglese britannico</option>
+          <option value="en-US">Inglese americano</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid">
+      <div>
+        <label class="check"><input type="checkbox" id="chk-contrast"> Alto contrasto</label>
+      </div>
+      <div>
+        <label class="check"><input type="checkbox" id="chk-font"> Carattere ad alta leggibilità (più spaziato)</label>
+      </div>
+      <div>
+        <label class="check"><input type="checkbox" id="chk-text"> Mostra anche la parola scritta</label>
+        <p class="hint">Utile per chi ha difficoltà di ascolto o per un primo aiuto.</p>
+      </div>
+    </div>
+  </details>
+
+  <main id="main" tabindex="-1">
+    <!-- Schermata iniziale -->
+    <section class="card" id="screen-start" aria-labelledby="start-title">
+      <h2 id="start-title">Pronti?</h2>
+      <p>Ogni partita ha 10 domande. Scegli livello e modalità nelle impostazioni, poi premi il pulsante.</p>
+      <div id="no-voice" class="notice" hidden>
+        Il tuo dispositivo non ha una voce per la lettura ad alta voce. Attiva "Mostra anche la parola scritta" nelle impostazioni, oppure prova la modalità "Leggi la parola e scegli il numero".
+      </div>
+      <p><button class="btn" id="btn-start" type="button">Inizia la partita</button></p>
+    </section>
+
+    <!-- Schermata di gioco -->
+    <section class="card" id="screen-game" aria-labelledby="game-title" hidden>
+      <h2 id="game-title" class="sr-only">Domanda</h2>
+      <p class="progress-text" id="progress-text">Domanda 1 di 10</p>
+      <div class="bar" role="progressbar" aria-label="Avanzamento" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="bar"><span id="bar-fill"></span></div>
+
+      <p class="prompt" id="prompt"></p>
+
+      <div id="listen-area">
+        <div class="row">
+          <button class="btn" id="btn-play" type="button">🔊 Ascolta</button>
+          <button class="btn secondary" id="btn-slow" type="button">🐢 Ascolta piano</button>
+        </div>
+        <div class="bigword" id="bigword" hidden></div>
+        <form class="answer-row" id="answer-form" autocomplete="off" style="margin-top:1rem">
+          <label for="answer" class="sr-only">Scrivi il numero con le cifre</label>
+          <input type="text" id="answer" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Scrivi il numero" autocomplete="off">
+          <button class="btn" id="btn-check" type="submit">Controlla</button>
+        </form>
+      </div>
+
+      <div id="read-area" hidden>
+        <div class="bigword" id="readword"></div>
+        <div class="row" style="margin-bottom:1rem">
+          <button class="btn secondary" id="btn-play2" type="button">🔊 Ascolta la parola</button>
+        </div>
+        <div class="choices" id="choices" role="group" aria-label="Scegli il numero giusto"></div>
+      </div>
+
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+
+      <div class="row" style="margin-top:1rem">
+        <button class="btn" id="btn-next" type="button" hidden>Avanti</button>
+        <button class="btn secondary" id="btn-replay" type="button" hidden>🔊 Riascolta</button>
+      </div>
+    </section>
+
+    <!-- Schermata finale -->
+    <section class="card" id="screen-end" aria-labelledby="end-title" hidden>
+      <h2 id="end-title">Partita finita</h2>
+      <p class="score" id="score" aria-live="polite"></p>
+      <p id="end-msg"></p>
+      <div id="review-wrap" hidden>
+        <h3>Da ripassare</h3>
+        <p class="hint">Ascolta questi numeri una volta in più: sono quelli su cui ti sei fermato.</p>
+        <ul class="review" id="review"></ul>
+      </div>
+      <div class="row">
+        <button class="btn" id="btn-again" type="button">Gioca ancora</button>
+        <button class="btn secondary" id="btn-retry-errors" type="button" hidden>Rigioca solo gli errori</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Questo gioco funziona nel browser e non raccoglie né salva dati personali. Le impostazioni scelte restano solo su questo dispositivo.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Numeri in inglese ---------- */
+  var ONES = ["zero","one","two","three","four","five","six","seven","eight","nine","ten",
+    "eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+  var TENS = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+
+  function toWords(n) {
+    if (n < 20) return ONES[n];
+    if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? "-" + ONES[n % 10] : "");
+    if (n < 1000) return ONES[Math.floor(n / 100)] + " hundred" + (n % 100 ? " and " + toWords(n % 100) : "");
+    return "one thousand";
+  }
+
+  /* ---------- Elementi ---------- */
+  function $(id) { return document.getElementById(id); }
+  var root = document.documentElement;
+  var el = {
+    level: $("sel-level"), mode: $("sel-mode"), size: $("sel-size"), accent: $("sel-accent"),
+    contrast: $("chk-contrast"), font: $("chk-font"), text: $("chk-text"),
+    start: $("screen-start"), game: $("screen-game"), end: $("screen-end"),
+    noVoice: $("no-voice"), btnStart: $("btn-start"),
+    progressText: $("progress-text"), bar: $("bar"), barFill: $("bar-fill"),
+    prompt: $("prompt"), listenArea: $("listen-area"), readArea: $("read-area"),
+    bigword: $("bigword"), readword: $("readword"),
+    btnPlay: $("btn-play"), btnSlow: $("btn-slow"), btnPlay2: $("btn-play2"),
+    form: $("answer-form"), answer: $("answer"), choices: $("choices"),
+    feedback: $("feedback"), btnNext: $("btn-next"), btnReplay: $("btn-replay"),
+    score: $("score"), endMsg: $("end-msg"), reviewWrap: $("review-wrap"), review: $("review"),
+    btnAgain: $("btn-again"), btnRetry: $("btn-retry-errors")
+  };
+
+  /* ---------- Impostazioni (solo sul dispositivo) ---------- */
+  var KEY = "gioco-numeri-impostazioni";
+  function loadSettings() {
+    try {
+      var s = JSON.parse(localStorage.getItem(KEY) || "{}");
+      if (s.level) el.level.value = s.level;
+      if (s.mode) el.mode.value = s.mode;
+      if (s.size) el.size.value = s.size;
+      if (s.accent) el.accent.value = s.accent;
+      el.contrast.checked = !!s.contrast;
+      el.font.checked = !!s.font;
+      el.text.checked = !!s.text;
+    } catch (e) { /* storage non disponibile: si usano i valori predefiniti */ }
+  }
+  function saveSettings() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        level: el.level.value, mode: el.mode.value, size: el.size.value, accent: el.accent.value,
+        contrast: el.contrast.checked, font: el.font.checked, text: el.text.checked
+      }));
+    } catch (e) { /* ignora */ }
+  }
+  function applyLook() {
+    root.setAttribute("data-size", el.size.value);
+    if (el.contrast.checked) root.setAttribute("data-contrast", "alto"); else root.removeAttribute("data-contrast");
+    if (el.font.checked) root.setAttribute("data-font", "leggibile"); else root.removeAttribute("data-font");
+  }
+  [el.level, el.mode, el.size, el.accent, el.contrast, el.font, el.text].forEach(function (c) {
+    c.addEventListener("change", function () { saveSettings(); applyLook(); refreshQuestionView(); });
+  });
+
+  /* ---------- Sintesi vocale ---------- */
+  var synth = window.speechSynthesis;
+  var voices = [];
+  function loadVoices() { if (synth) voices = synth.getVoices() || []; updateVoiceNotice(); }
+  function pickVoice() {
+    var lang = el.accent.value;
+    var i, v;
+    for (i = 0; i < voices.length; i++) { v = voices[i]; if (v.lang && v.lang.replace("_", "-") === lang) return v; }
+    for (i = 0; i < voices.length; i++) { v = voices[i]; if (v.lang && v.lang.toLowerCase().indexOf("en") === 0) return v; }
+    return null;
+  }
+  function hasVoice() { return !!(synth && window.SpeechSynthesisUtterance && pickVoice()); }
+  function updateVoiceNotice() {
+    var need = !!(synth && window.SpeechSynthesisUtterance) ? voices.length > 0 && !pickVoice() : true;
+    el.noVoice.hidden = !need;
+  }
+  if (synth) {
+    loadVoices();
+    if (synth.addEventListener) synth.addEventListener("voiceschanged", loadVoices);
+  } else {
+    updateVoiceNotice();
+  }
+  function speak(text, slow) {
+    if (!synth || !window.SpeechSynthesisUtterance) return;
+    synth.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var v = pickVoice();
+    if (v) u.voice = v;
+    u.lang = el.accent.value;
+    u.rate = slow ? 0.55 : 0.9;
+    synth.speak(u);
+  }
+
+  /* ---------- Stato di gioco ---------- */
+  var TOTAL = 10;
+  var questions = [];
+  var index = 0;
+  var score = 0;
+  var wrongs = [];
+  var answered = false;
+  var current = null;
+
+  function randInt(max) { return Math.floor(Math.random() * (max + 1)); }
+  function makeQuestions(max, pool) {
+    var list = [], used = {};
+    if (pool) {
+      pool.forEach(function (n) { list.push(n); });
+      return shuffle(list);
+    }
+    var guard = 0;
+    while (list.length < TOTAL && guard < 500) {
+      guard++;
+      var n = randInt(max);
+      if (max >= 100 && Math.random() < 0.35) { // più spazio ai numeri "difficili" (es. 13/30, 14/40)
+        var teens = [13, 14, 15, 16, 17, 18, 19, 30, 40, 50, 60, 70, 80, 90];
+        n = teens[randInt(teens.length - 1)];
+        if (n > max) n = randInt(max);
+      }
+      if (!used[n] || Object.keys(used).length > max) { used[n] = true; list.push(n); }
+    }
+    return list;
+  }
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function show(which) {
+    el.start.hidden = which !== "start";
+    el.game.hidden = which !== "game";
+    el.end.hidden = which !== "end";
+  }
+  function focusMain() { var m = $("main"); m.focus({ preventScroll: false }); }
+
+  function startGame(pool) {
+    var max = parseInt(el.level.value, 10);
+    questions = makeQuestions(max, pool);
+    index = 0; score = 0; wrongs = [];
+    show("game");
+    nextQuestion(true);
+  }
+
+  function nextQuestion(first) {
+    if (index >= questions.length) { finish(); return; }
+    current = questions[index];
+    answered = false;
+    el.feedback.className = "feedback";
+    el.feedback.innerHTML = "";
+    el.btnNext.hidden = true;
+    el.btnReplay.hidden = true;
+    el.progressText.textContent = "Domanda " + (index + 1) + " di " + questions.length;
+    el.bar.setAttribute("aria-valuemax", String(questions.length));
+    el.bar.setAttribute("aria-valuenow", String(index));
+    el.barFill.style.width = (index / questions.length * 100) + "%";
+    renderQuestion();
+    if (el.mode.value === "listen") {
+      el.answer.value = "";
+      el.answer.disabled = false;
+      $("btn-check").disabled = false;
+      el.answer.focus();
+      if (hasVoice()) setTimeout(function () { speak(toWords(current), false); }, 250);
+    } else {
+      var first = el.choices.querySelector("button");
+      if (first) first.focus();
+    }
+  }
+
+  function renderQuestion() {
+    var listen = el.mode.value === "listen";
+    el.listenArea.hidden = !listen;
+    el.readArea.hidden = listen;
+    if (listen) {
+      el.prompt.textContent = "Ascolta con attenzione e scrivi il numero con le cifre.";
+      var showText = el.text.checked || !hasVoice();
+      el.bigword.hidden = !showText;
+      el.bigword.textContent = toWords(current);
+      el.bigword.setAttribute("lang", "en");
+    } else {
+      el.prompt.textContent = "Leggi la parola e scegli il numero giusto.";
+      el.readword.textContent = toWords(current);
+      el.readword.setAttribute("lang", "en");
+      el.btnPlay2.hidden = !hasVoice();
+      buildChoices();
+    }
+  }
+
+  // Aggiorna la vista quando cambiano le impostazioni a metà partita, senza perdere la domanda
+  function refreshQuestionView() {
+    if (el.game.hidden || current === null) return;
+    var wasAnswered = answered;
+    renderQuestion();
+    if (wasAnswered && el.mode.value === "read") { /* la scelta resta sullo schermo finché non si passa oltre */ }
+  }
+
+  function buildChoices() {
+    var max = Math.max(parseInt(el.level.value, 10), 10);
+    var set = {}; set[current] = true;
+    var opts = [current];
+    var guard = 0;
+    while (opts.length < 4 && guard < 200) {
+      guard++;
+      var d;
+      // distrattori plausibili: numeri vicini o con cifre scambiate (13/30)
+      var r = Math.random();
+      if (r < 0.35 && current >= 13 && current % 10 !== 0 && current < 20) d = (current - 10) * 10;
+      else if (r < 0.55 && current >= 20) d = parseInt(String(current).split("").reverse().join(""), 10);
+      else d = current + (randInt(10) - 5);
+      if (d >= 0 && d <= max && !set[d]) { set[d] = true; opts.push(d); }
+      if (guard > 100 && !set[guard % (max + 1)]) { set[guard % (max + 1)] = true; opts.push(guard % (max + 1)); }
+    }
+    shuffle(opts);
+    el.choices.innerHTML = "";
+    opts.forEach(function (n) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn secondary choice";
+      b.textContent = String(n);
+      b.setAttribute("data-n", String(n));
+      b.addEventListener("click", function () { onChoice(n, b); });
+      el.choices.appendChild(b);
+    });
+  }
+
+  /* ---------- Risposte e feedback ---------- */
+  var PRAISE = ["Esatto! Ottimo ascolto.", "Giusto! Continua così.", "Bravo, risposta corretta!", "Perfetto, ci sei!", "Proprio così!"];
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+  function tip(n, given) {
+    // Suggerimenti mirati sugli errori più comuni
+    if (given !== null && !isNaN(given)) {
+      if (n >= 13 && n <= 19 && given === (n - 10) * 10) {
+        return "Attenzione: i numeri che finiscono in <em>-teen</em> (come thirteen) vanno da 13 a 19. Quelli che finiscono in <em>-ty</em> (come thirty) sono le decine: 30, 40, 50…";
+      }
+      if (n >= 20 && n % 10 === 0 && given === n / 10 + 10 && given >= 13 && given <= 19) {
+        return "Attenzione: <em>-ty</em> indica le decine (thirty = 30), mentre <em>-teen</em> indica da 13 a 19 (thirteen = 13). Ascolta se senti la parte finale più forte.";
+      }
+      if (n >= 20 && n < 100 && given === parseInt(String(n).split("").reverse().join(""), 10)) {
+        return "Hai scambiato le cifre. In inglese si dice prima la decina e poi l'unità: " + toWords(n) + " = " + n + ".";
+      }
+    }
+    if (n >= 100 && n < 1000) return "Struttura da ricordare: centinaia + <em>hundred</em> + <em>and</em> + decine e unità.";
+    return "";
+  }
+
+  function finishAnswer(correct, given) {
+    answered = true;
+    if (correct) score++;
+    else wrongs.push(current);
+    var word = toWords(current);
+    var html;
+    if (correct) {
+      el.feedback.className = "feedback ok";
+      html = "<strong>✔ " + pick(PRAISE) + "</strong><p><span lang=\"en\">" + word + "</span> = " + current + "</p>";
+    } else {
+      el.feedback.className = "feedback ko";
+      var g = (given === null || isNaN(given)) ? null : given;
+      html = "<strong>✘ Non proprio, ma ci sei quasi.</strong>" +
+        "<p>" + (g !== null ? "Hai scelto " + g + ". " : "") + "Il numero giusto era <b>" + current + "</b>: <span lang=\"en\">" + word + "</span>.</p>";
+      var t = tip(current, g);
+      if (t) html += "<p>" + t + "</p>";
+      html += "<p>Premi “Riascolta” per sentire di nuovo la parola.</p>";
+    }
+    el.feedback.innerHTML = html;
+    el.barFill.style.width = ((index + 1) / questions.length * 100) + "%";
+    el.bar.setAttribute("aria-valuenow", String(index + 1));
+    el.btnNext.textContent = (index + 1 >= questions.length) ? "Vedi il risultato" : "Avanti";
+    el.btnNext.hidden = false;
+    el.btnReplay.hidden = !hasVoice();
+    el.btnNext.focus();
+  }
+
+  el.form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (answered) return;
+    var raw = el.answer.value.trim();
+    if (raw === "") {
+      el.feedback.className = "feedback ko";
+      el.feedback.innerHTML = "<strong>Scrivi un numero con le cifre, per esempio 7.</strong>";
+      el.answer.focus();
+      return;
+    }
+    if (!/^[0-9]+$/.test(raw)) {
+      el.feedback.className = "feedback ko";
+      el.feedback.innerHTML = "<strong>Usa solo le cifre da 0 a 9, per esempio 15.</strong>";
+      el.answer.focus();
+      return;
+    }
+    var given = parseInt(raw, 10);
+    el.answer.disabled = true;
+    $("btn-check").disabled = true;
+    finishAnswer(given === current, given);
+  });
+
+  function onChoice(n, btn) {
+    if (answered) return;
+    var buttons = el.choices.querySelectorAll("button");
+    Array.prototype.forEach.call(buttons, function (b) {
+      b.disabled = true;
+      if (parseInt(b.getAttribute("data-n"), 10) === current) {
+        b.classList.add("right");
+        b.textContent = "✔ " + b.textContent;
+      }
+    });
+    if (n !== current) {
+      btn.classList.add("wrong");
+      btn.textContent = "✘ " + String(n);
+    }
+    finishAnswer(n === current, n);
+  }
+
+  el.btnNext.addEventListener("click", function () { index++; nextQuestion(false); });
+  el.btnReplay.addEventListener("click", function () { speak(toWords(current), false); });
+  el.btnPlay.addEventListener("click", function () { speak(toWords(current), false); el.answer.focus(); });
+  el.btnSlow.addEventListener("click", function () { speak(toWords(current), true); el.answer.focus(); });
+  el.btnPlay2.addEventListener("click", function () { speak(toWords(current), false); });
+
+  /* ---------- Fine partita ---------- */
+  function finish() {
+    show("end");
+    el.score.textContent = score + " su " + questions.length;
+    var ratio = score / questions.length;
+    var msg;
+    if (ratio === 1) msg = "Ottimo lavoro: nessun errore! Prova il livello successivo.";
+    else if (ratio >= 0.7) msg = "Molto bene! Con un ultimo ripasso degli errori sarai ancora più sicuro.";
+    else if (ratio >= 0.4) msg = "Buon inizio. Ripassa i numeri qui sotto e riprova: ogni partita ti allena l'orecchio.";
+    else msg = "Non preoccuparti: i numeri in inglese richiedono pratica. Prova il livello Facile e usa “Ascolta piano”.";
+    el.endMsg.textContent = msg;
+
+    el.review.innerHTML = "";
+    var uniq = wrongs.filter(function (n, i) { return wrongs.indexOf(n) === i; });
+    el.reviewWrap.hidden = uniq.length === 0;
+    el.btnRetry.hidden = uniq.length === 0;
+    uniq.forEach(function (n) {
+      var li = document.createElement("li");
+      var span = document.createElement("span");
+      span.innerHTML = "<b>" + n + "</b> = <span lang=\"en\">" + toWords(n) + "</span>";
+      li.appendChild(span);
+      if (hasVoice()) {
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "btn secondary";
+        b.textContent = "🔊 Ascolta";
+        b.setAttribute("aria-label", "Ascolta " + toWords(n));
+        b.addEventListener("click", function () { speak(toWords(n), false); });
+        li.appendChild(b);
+      }
+      el.review.appendChild(li);
+    });
+    el.endMsg.setAttribute("tabindex", "-1");
+    $("end-title").setAttribute("tabindex", "-1");
+    $("end-title").focus();
+  }
+
+  el.btnStart.addEventListener("click", function () { startGame(null); });
+  el.btnAgain.addEventListener("click", function () { startGame(null); });
+  el.btnRetry.addEventListener("click", function () {
+    var uniq = wrongs.filter(function (n, i) { return wrongs.indexOf(n) === i; });
+    startGame(uniq);
+  });
+
+  /* ---------- Avvio ---------- */
+  loadSettings();
+  applyLook();
+  show("start");
+})();
+</script>
+</body>
+</html>
